@@ -1,0 +1,6 @@
+# For the OSX users out there.
+*.DS_STORE
+
+# Cargo Related items.
+debug/
+target/

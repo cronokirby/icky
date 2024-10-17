@@ -1,0 +1,19 @@
+[workspace]
+# In my experience, the latest (2024-10-12) resolver version behaves better w.r.t.
+# features and other things like that.
+# We don't *require* it for now, but we might in the feature.
+resolver = "2"
+# We need to explicitly include every crate in our workspace.
+# If you add a crate, add it here as well.
+members = [
+  # The only crate (for now).
+  "crates/icky",
+ ]
+
+# Shared configuration between packages / crates.
+[workspace.package]
+authors = ["Lucas Meier <lucas@cronokirby.com>"]
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/cronokirby/icky"
+version = "0.1.0"

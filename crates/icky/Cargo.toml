@@ -1,0 +1,9 @@
+[package]
+name = "icky"
+description = "Icky programming language."
+# Inherit remaining properties from the workspace.
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
