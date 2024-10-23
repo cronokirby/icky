@@ -1,4 +1,11 @@
+mod error;
+// TODO: remove when this is used.
+#[allow(dead_code)]
+mod syntax;
+
+use error::Result;
 use std::collections::HashMap;
+use syntax::{parse, SyntaxTree};
 
 /// A value in our programming language.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -19,13 +26,14 @@ impl Context {
     }
 }
 
-/// Errors produced during compilation.
-#[derive(Debug, Clone)]
-pub struct Errors {}
+fn eval_tree(_tree: SyntaxTree) -> Result<Context> {
+    todo!()
+}
 
 /// Take in a source file, and produce the evaluation context.
 ///
 /// This context will map each definition in the file to its evaluation.
-pub fn eval(_source: &str) -> Result<Context, Errors> {
-    todo!()
+pub fn eval(source: &str) -> Result<Context> {
+    let tree = parse(source)?;
+    eval_tree(tree)
 }
