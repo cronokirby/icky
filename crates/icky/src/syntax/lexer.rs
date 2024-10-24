@@ -4,7 +4,7 @@
 use crate::error::Result;
 use std::{
     iter::{self, Peekable},
-    str::Chars,
+    str::CharIndices,
 };
 
 fn starts_lower_name(c: char) -> bool {
@@ -23,10 +23,16 @@ fn digit(c: char) -> Option<i64> {
     Some(c.to_digit(10)? as i64)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
+pub struct Span {
+    pub start: usize,
+    pub len: usize,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum Token {
-    UpperName(String),
-    LowerName(String),
+    UpperName(Span),
+    LowerName(Span),
     IntegerLiteral(i64),
     LineBreak,
     Colon,
@@ -34,32 +40,42 @@ pub enum Token {
 }
 
 struct Lexer<'s> {
-    inner: Peekable<Chars<'s>>,
+    inner: Peekable<CharIndices<'s>>,
 }
 
 impl<'s> Lexer<'s> {
     fn new(source: &'s str) -> Self {
         Self {
-            inner: source.chars().peekable(),
+            inner: source.char_indices().peekable(),
         }
     }
 
-    fn name(&mut self, start: char) -> String {
-        iter::once(start)
-            .chain(self.inner.by_ref().take_while(|&c| continues_name(c)))
-            .collect()
+    fn name(&mut self, start: usize, first: char) -> Span {
+        let (end, _) = iter::once((start, first))
+            .chain(self.inner.by_ref().take_while(|&(_, c)| continues_name(c)))
+            .last()
+            .unwrap();
+        Span {
+            start,
+            len: end - start + 1,
+        }
     }
 
     /// Collect whitespace, returning true if a line break was encountered.
     fn whitespace(&mut self, start: char) -> bool {
         iter::once(start)
-            .chain(self.inner.by_ref().take_while(|&c| c.is_whitespace()))
+            .chain(
+                self.inner
+                    .by_ref()
+                    .map(|(_, c)| c)
+                    .take_while(|c| c.is_whitespace()),
+            )
             .any(|c| c == '\n')
     }
 
     fn integer(&mut self, start: char) -> i64 {
         iter::once(start)
-            .chain(self.inner.by_ref())
+            .chain(self.inner.by_ref().map(|(_, c)| c))
             .map_while(|c| digit(c))
             .fold(0i64, |acc, x| 10 * acc + x)
     }
@@ -71,11 +87,16 @@ impl Iterator for Lexer<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         // We exit only by returning.
         loop {
-            match self.inner.next()? {
+            let (start, c) = self.inner.next()?;
+            match c {
                 ':' => return Some(Ok(Token::Colon)),
                 ';' => return Some(Ok(Token::Semicolon)),
-                c if starts_lower_name(c) => return Some(Ok(Token::LowerName(self.name(c)))),
-                c if starts_upper_name(c) => return Some(Ok(Token::UpperName(self.name(c)))),
+                c if starts_lower_name(c) => {
+                    return Some(Ok(Token::LowerName(self.name(start, c))))
+                }
+                c if starts_upper_name(c) => {
+                    return Some(Ok(Token::UpperName(self.name(start, c))))
+                }
                 c if c.is_whitespace() => {
                     if self.whitespace(c) {
                         return Some(Ok(Token::LineBreak));
