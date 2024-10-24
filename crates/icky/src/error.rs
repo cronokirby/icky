@@ -1,5 +1,5 @@
-/// Errors produced during compilation.
+/// Error produced during compilation.
 #[derive(Debug, Clone)]
-pub struct Errors {}
+pub struct Error(pub String);
 
-pub type Result<T> = std::result::Result<T, Errors>;
+pub type Result<T> = std::result::Result<T, Error>;
