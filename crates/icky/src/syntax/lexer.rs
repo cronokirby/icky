@@ -37,6 +37,24 @@ pub enum Token {
     LineBreak,
     Colon,
     Semicolon,
+    Equals,
+}
+
+impl Token {
+    pub fn integer_literal(self) -> Option<i64> {
+        match self {
+            Token::IntegerLiteral(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub fn name(self) -> Option<Span> {
+        match self {
+            Token::UpperName(x) => Some(x),
+            Token::LowerName(x) => Some(x),
+            _ => None,
+        }
+    }
 }
 
 struct Lexer<'s> {
@@ -50,27 +68,21 @@ impl<'s> Lexer<'s> {
         }
     }
 
-    fn name(&mut self, start: usize, first: char) -> Span {
-        let (end, _) = iter::once((start, first))
-            .chain(self.inner.by_ref().take_while(|&(_, c)| continues_name(c)))
-            .last()
-            .unwrap();
-        Span {
-            start,
-            len: end - start + 1,
+    fn name(&mut self, start: usize, _first: char) -> Span {
+        let mut len = 1;
+        while let Some(_) = self.inner.next_if(|(_, c)| continues_name(*c)) {
+            len += 1;
         }
+        Span { start, len }
     }
 
     /// Collect whitespace, returning true if a line break was encountered.
     fn whitespace(&mut self, start: char) -> bool {
-        iter::once(start)
-            .chain(
-                self.inner
-                    .by_ref()
-                    .map(|(_, c)| c)
-                    .take_while(|c| c.is_whitespace()),
-            )
-            .any(|c| c == '\n')
+        let mut has_newline = start == '\n';
+        while let Some((_, c)) = self.inner.next_if(|(_, c)| c.is_whitespace()) {
+            has_newline = has_newline || c == '\n';
+        }
+        has_newline
     }
 
     fn integer(&mut self, start: char) -> i64 {
@@ -91,6 +103,7 @@ impl Iterator for Lexer<'_> {
             match c {
                 ':' => return Some(Ok(Token::Colon)),
                 ';' => return Some(Ok(Token::Semicolon)),
+                '=' => return Some(Ok(Token::Equals)),
                 c if starts_lower_name(c) => {
                     return Some(Ok(Token::LowerName(self.name(start, c))))
                 }
