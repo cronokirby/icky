@@ -1,3 +1,5 @@
+mod lexer;
+
 use crate::error::Result;
 
 /// A name that starts with an "uppercase" letter.
