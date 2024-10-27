@@ -1,6 +1,6 @@
 mod lexer;
 
-use crate::error::{Error, Result};
+use anyhow::anyhow;
 use lexer::{lex, Span, Token};
 
 /// A name that starts with an "uppercase" letter.
@@ -76,7 +76,7 @@ peg::parser! {
     }
 }
 
-pub fn parse(source: &str) -> Result<SyntaxTree> {
-    let tokens = lex(source).collect::<Result<Vec<_>>>()?;
-    root::root(&tokens).map_err(|e| Error(format!("{}", e)))
+pub fn parse(source: &str) -> anyhow::Result<SyntaxTree> {
+    let tokens = lex(source).collect::<Result<Vec<_>, _>>()?;
+    root::root(&tokens).map_err(|e| anyhow!("{}", e))
 }

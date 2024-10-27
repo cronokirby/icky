@@ -9,4 +9,5 @@ repository = { workspace = true }
 version = { workspace = true }
 
 [dependencies]
+anyhow = "1.0.91"
 peg = "0.8.4"

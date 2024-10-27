@@ -1,7 +1,7 @@
 //! This module exists because writing a parser without a lexer is very annoying:
 //!   1. you need to manually implement whitespace skipping,
 //!   2. in our case, we need semi-colon insertion, which we do by inserting "new line" tokens.
-use crate::error::Result;
+use anyhow::anyhow;
 use std::{
     iter::{self, Peekable},
     str::CharIndices,
@@ -94,7 +94,7 @@ impl<'s> Lexer<'s> {
 }
 
 impl Iterator for Lexer<'_> {
-    type Item = Result<Token>;
+    type Item = anyhow::Result<Token>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // We exit only by returning.
@@ -116,12 +116,12 @@ impl Iterator for Lexer<'_> {
                     }
                 }
                 c if c.is_digit(10) => return Some(Ok(Token::IntegerLiteral(self.integer(c)))),
-                c => return Some(Err(format!("lexer: unexpected character: {}", c).into())),
+                c => return Some(Err(anyhow!("lexer: unexpected character: {}", c).into())),
             };
         }
     }
 }
 
-pub fn lex<'s>(source: &'s str) -> impl Iterator<Item = Result<Token>> + 's {
+pub fn lex<'s>(source: &'s str) -> impl Iterator<Item = anyhow::Result<Token>> + 's {
     Lexer::new(source)
 }
