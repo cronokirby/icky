@@ -1,5 +1,3 @@
-// TODO: remove when this is used.
-#[allow(dead_code)]
 mod syntax;
 
 use anyhow;

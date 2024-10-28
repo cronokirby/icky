@@ -40,23 +40,6 @@ pub enum Token {
     Equals,
 }
 
-impl Token {
-    pub fn integer_literal(self) -> Option<i64> {
-        match self {
-            Token::IntegerLiteral(n) => Some(n),
-            _ => None,
-        }
-    }
-
-    pub fn name(self) -> Option<Span> {
-        match self {
-            Token::UpperName(x) => Some(x),
-            Token::LowerName(x) => Some(x),
-            _ => None,
-        }
-    }
-}
-
 struct Lexer<'s> {
     inner: Peekable<CharIndices<'s>>,
 }
