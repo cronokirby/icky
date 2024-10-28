@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use std::{env, fs, process::exit, str::FromStr};
 
-use icky::{eval, parse};
+use icky::{eval, parse, Context};
 
 #[derive(Debug)]
 enum Mode {
@@ -31,7 +31,10 @@ fn main() -> anyhow::Result<()> {
     let source = fs::read_to_string(&args[2])?;
     match mode {
         Mode::Parse => {
-            println!("{:#?}", parse(&source)?);
+            let ctx = Context::new(&source);
+            parse(&source)?
+                .pretty(&ctx)
+                .print(0, &mut std::io::stdout())?;
         }
         Mode::Run => {
             println!("{:#?}", eval(&source)?);

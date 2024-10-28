@@ -3,11 +3,19 @@ mod lexer;
 use anyhow::anyhow;
 use lexer::{lex, Span, Token};
 
+use crate::{context::Context, pretty::Doc};
+
 /// A name that starts with an "uppercase" letter.
 ///
 /// Typically, this is used for type names in the language.
 #[derive(Debug)]
 pub struct UpperIdent(pub Span);
+
+impl UpperIdent {
+    fn pretty(&self, ctx: &Context) -> Doc {
+        Doc::string(ctx.span(self.0.start, self.0.len).into())
+    }
+}
 
 /// A name that starts with a "lowercase" letter.
 ///
@@ -15,11 +23,25 @@ pub struct UpperIdent(pub Span);
 #[derive(Debug)]
 pub struct LowerIdent(pub Span);
 
+impl LowerIdent {
+    fn pretty(&self, ctx: &Context) -> Doc {
+        Doc::string(ctx.span(self.0.start, self.0.len).into())
+    }
+}
+
 #[derive(Debug)]
 pub enum Expr {
     // TODO[1]: allow arbitrary precision here.
     /// e.g. `0`, `1000`, etc.
     IntegerLiteral(i64),
+}
+
+impl Expr {
+    fn pretty(&self, _ctx: &Context) -> Doc {
+        match self {
+            Expr::IntegerLiteral(x) => Doc::string(format!("(i64 {})", x)),
+        }
+    }
 }
 
 /// A top level declaration, e.g.
@@ -35,9 +57,42 @@ pub struct Declaration {
     pub body: Expr,
 }
 
+impl Declaration {
+    pub fn pretty(&self, ctx: &Context) -> Doc {
+        Doc::join(
+            "\n",
+            vec![
+                Doc::from("((: ")
+                    .then(self.header_name.pretty(ctx))
+                    .then(" ".into())
+                    .then(self.header_type.pretty(ctx))
+                    .then(")".into()),
+                Doc::indent(
+                    Doc::from("(= ")
+                        .then(self.body_name.pretty(ctx))
+                        .then(" ".into())
+                        .then(self.body.pretty(ctx))
+                        .then(")".into()),
+                ),
+            ],
+        )
+    }
+}
+
 #[derive(Debug)]
 pub struct SyntaxTree {
     pub declarations: Vec<Declaration>,
+}
+
+impl SyntaxTree {
+    pub fn pretty(&self, ctx: &Context) -> Doc {
+        Doc::from("(decls\n")
+            .then(Doc::indent(Doc::join(
+                "\n",
+                self.declarations.iter().map(|x| x.pretty(ctx)).collect(),
+            )))
+            .then(Doc::constant(")"))
+    }
 }
 
 peg::parser! {
